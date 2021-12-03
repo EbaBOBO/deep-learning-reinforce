@@ -92,9 +92,9 @@ class ReinforceWithBaseline(tf.keras.Model):
         """
         # TODO: implement this :)
         # Hint: use tf.gather_nd (https://www.tensorflow.org/api_docs/python/tf/gather_nd) to get the probabilities of the actions taken by the model
-        value = self.value_function(states)
+        value = tf.squeeze(self.value_function(states))
         advantage = discounted_rewards - value
-        l_critic = tf.square(advantage)
+        l_critic = tf.reduce_sum(tf.square(advantage))
 
         actions = list(actions)
         action = tf.convert_to_tensor([[i,num] for i,num in enumerate(actions)])
@@ -106,6 +106,7 @@ class ReinforceWithBaseline(tf.keras.Model):
         l_actor = tf.reduce_sum(-tf.math.log(pro1)*tf.stop_gradient(advantage))
 
         logits = l_actor + l_critic
+        # print(logits)
 
         return logits
         pass
