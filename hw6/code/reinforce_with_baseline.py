@@ -27,6 +27,13 @@ class ReinforceWithBaseline(tf.keras.Model):
         self.num_actions = num_actions
 
         # TODO: Define actor network parameters, critic network parameters, and optimizer
+        self.num_input = state_size
+        self.hidden_layer = 100
+        self.dense_layer1 = tf.keras.layers.Dense(self.hidden_layer, activation= 'relu')
+        self.dense_layer2 = tf.keras.layers.Dense(self.num_actions)
+        self.critic_layer1 = tf.keras.layers.Dense(self.hidden_layer, activation= 'relu')
+        self.critic_layer2 = tf.keras.layers.Dense(1)
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
         pass
 
     def call(self, states):
@@ -41,6 +48,11 @@ class ReinforceWithBaseline(tf.keras.Model):
         for each state in the episode
         """
         # TODO: implement this!
+        states1 = self.dense_layer1(states)
+        states2 = self.dense_layer2(states1)
+        prob = tf.nn.softmax(states2)
+    
+        return prob
         pass
 
     def value_function(self, states):
@@ -53,6 +65,10 @@ class ReinforceWithBaseline(tf.keras.Model):
         :return: A [episode_length] matrix representing the value of each state.
         """
         # TODO: implement this :D
+        states1 = self.critic_layer1(states)
+        prob = self.critic_layer2(states1)
+    
+        return prob
         pass
 
     def loss(self, states, actions, discounted_rewards):
@@ -76,4 +92,20 @@ class ReinforceWithBaseline(tf.keras.Model):
         """
         # TODO: implement this :)
         # Hint: use tf.gather_nd (https://www.tensorflow.org/api_docs/python/tf/gather_nd) to get the probabilities of the actions taken by the model
+        value = self.value_function(states)
+        advantage = discounted_rewards - value
+        l_critic = tf.square(advantage)
+
+        actions = list(actions)
+        action = tf.convert_to_tensor([[i,num] for i,num in enumerate(actions)])
+        pro = self.call(states)
+        pro1 = tf.gather_nd(pro, action)
+
+        discounted_rewards = tf.reshape(discounted_rewards,[1,-1])
+
+        l_actor = tf.reduce_sum(-tf.math.log(pro1)*tf.stop_gradient(advantage))
+
+        logits = l_actor + l_critic
+
+        return logits
         pass
