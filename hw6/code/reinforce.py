@@ -64,15 +64,18 @@ class Reinforce(tf.keras.Model):
         # Hint: Use gather_nd to get the probability of each action that was actually taken in the episode.
         # print('loss,states shape',states.shape,actions)
         actions = list(actions)
-        action = [[i,num] for i,num in enumerate(actions)]
-        # print(action)
+        action = tf.convert_to_tensor([[i,num] for i,num in enumerate(actions)])
+
         pro = self.call(states)
         pro1 = tf.gather_nd(pro, action)
-        # print(pro.shape,pro1.shape)
-        discounted_rewards = tf.reshape(discounted_rewards,[-1,1])
-        # print('pro shape',pro1.shape,discounted_rewards.shape)
-        # print('log',tf.math.log(pro))
-        logits = -tf.reduce_sum(discounted_rewards*(tf.math.log(pro1)))
+        # print(pro1)
+
+        discounted_rewards = tf.reshape(discounted_rewards,[1,-1])
+        # print(discounted_rewards)
+        # print(pro1.shape,discounted_rewards.shape)
+        # print('log',tf.math.log(pro1))
+        logits = tf.reduce_sum(-tf.math.log(pro1)*discounted_rewards)
+        # print(logits)
         return logits
         pass
 

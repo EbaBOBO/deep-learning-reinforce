@@ -99,7 +99,7 @@ def generate_trajectory(env, model):
         prob = model.call(state1)
         prob = np.squeeze(prob, axis=0)
         action = np.random.choice([0,1],p=prob)
-        
+
         actions.append(action)
         state, rwd, done, _ = env.step(action)
         rewards.append(rwd)
@@ -130,9 +130,9 @@ def train(env, model):
     # 3) Compute the loss from the model and run backpropagation on the model.
     states = np.array(states,np.float32)
     with tf.GradientTape() as tape:
-        loss = model.loss(states, actions, discounted_rewards)
-        gradients = tape.gradient(loss,model.trainable_variables)
-        model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+        loss = model.loss(states, np.array(actions), np.array(discounted_rewards))
+    gradients = tape.gradient(loss,model.trainable_variables)
+    model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     
     return np.sum(rewards)
 
