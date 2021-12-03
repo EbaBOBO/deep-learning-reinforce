@@ -123,7 +123,7 @@ def train(env, model):
 
     # TODO:
     # 1) Use generate trajectory to run an episode and get states, actions, and rewards.
-    print('train')
+    # print('train')
     states, actions, rewards = generate_trajectory(env,model)
     # 2) Compute discounted rewards.
     discounted_rewards = discount(rewards)
@@ -134,7 +134,7 @@ def train(env, model):
         gradients = tape.gradient(loss,model.trainable_variables)
         model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     
-    return np.sum(loss)
+    return np.sum(rewards)
 
 
 
@@ -162,10 +162,11 @@ def main():
     rew = []
     for i in range(650):
         rew.append(train(env,model))
-        # # print('rew:',rew)
+        if(i%50==0):
+            print('rew:',rew[i])
         # total_rewards += rew
     # sum_rewards = train(env,model)
-    avg_rewards = (tf.reduce_sum(rew[599:-1]))/50
+    avg_rewards = (np.sum(rew[599:]))/50
     print('avg_rewards:',avg_rewards)
 
     # TODO: Visualize your rewards.

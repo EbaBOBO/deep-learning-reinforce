@@ -26,7 +26,7 @@ class Reinforce(tf.keras.Model):
         # TODO: Define network parameters and optimizer
         self.num_input = state_size
         self.dense_layer1 = tf.keras.layers.Dense(100, activation= 'relu')
-        self.dense_layer2 = tf.keras.layers.Dense(self.num_actions, activation= 'relu')
+        self.dense_layer2 = tf.keras.layers.Dense(self.num_actions)
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
         
 
@@ -63,9 +63,12 @@ class Reinforce(tf.keras.Model):
         # TODO: implement this
         # Hint: Use gather_nd to get the probability of each action that was actually taken in the episode.
         # print('loss,states shape',states.shape,actions)
-        actions = tf.reshape(actions,[-1,1])
+        actions = list(actions)
+        action = [[i,num] for i,num in enumerate(actions)]
+        # print(action)
         pro = self.call(states)
-        pro1 = tf.gather_nd(pro, actions)
+        pro1 = tf.gather_nd(pro, action)
+        # print(pro.shape,pro1.shape)
         discounted_rewards = tf.reshape(discounted_rewards,[-1,1])
         # print('pro shape',pro1.shape,discounted_rewards.shape)
         # print('log',tf.math.log(pro))
