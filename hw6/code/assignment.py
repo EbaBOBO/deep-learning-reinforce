@@ -68,7 +68,11 @@ def discount(rewards, discount_factor=.99):
     :param discount_factor: Gamma discounting factor to use, defaults to .99
     :returns: discounted_rewards: list containing the discounted rewards for each timestep in the original rewards list
     """
-    # TODO: Compute discounted rewards
+    discount_rewards = np.zeros_like(rewards, dtype=np.float32)
+    discount_rewards[-1] = rewards[-1]
+    for i in range(len(rewards)-2,-1,-1):
+        discount_rewards[i] =rewards[i] + discount_factor* discount_rewards[i+1]
+    return discount_rewards
 
 
 def generate_trajectory(env, model):
@@ -88,11 +92,18 @@ def generate_trajectory(env, model):
     while not done:
         # TODO:
         # 1) use model to generate probability distribution over next actions
+        
         # 2) sample from this distribution to pick the next action
         states.append(state)
+        state1 = np.array(tf.reshape(state,[1,-1]))
+        prob = model.call(state1)
+        prob = np.squeeze(prob, axis=0)
+        action = np.random.choice([0,1],p=prob)
+        
         actions.append(action)
         state, rwd, done, _ = env.step(action)
         rewards.append(rwd)
+
 
     return states, actions, rewards
 
@@ -112,8 +123,19 @@ def train(env, model):
 
     # TODO:
     # 1) Use generate trajectory to run an episode and get states, actions, and rewards.
+    print('train')
+    states, actions, rewards = generate_trajectory(env,model)
     # 2) Compute discounted rewards.
+    discounted_rewards = discount(rewards)
     # 3) Compute the loss from the model and run backpropagation on the model.
+    states = np.array(states,np.float32)
+    with tf.GradientTape() as tape:
+        loss = model.loss(states, actions, discounted_rewards)
+        gradients = tape.gradient(loss,model.trainable_variables)
+        model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+    
+    return np.sum(loss)
+
 
 
 def main():
@@ -136,6 +158,15 @@ def main():
     # 1) Train your model for 650 episodes, passing in the environment and the agent.
     # 2) Append the total reward of the episode into a list keeping track of all of the rewards.
     # 3) After training, print the average of the last 50 rewards you've collected.
+    total_rewards = 0
+    rew = []
+    for i in range(650):
+        rew.append(train(env,model))
+        # # print('rew:',rew)
+        # total_rewards += rew
+    # sum_rewards = train(env,model)
+    avg_rewards = (tf.reduce_sum(rew[599:-1]))/50
+    print('avg_rewards:',avg_rewards)
 
     # TODO: Visualize your rewards.
 
